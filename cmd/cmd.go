@@ -12,7 +12,8 @@ import (
 	"github.com/masaushi/accessory/internal/parser"
 )
 
-const Version = "dev"
+// Version is the version of `accessory`, injected at build time.
+var Version = "dev"
 
 // newUsage returns a function to replace default usage function of FlagSet.
 func newUsage(flags *flag.FlagSet) func() {
