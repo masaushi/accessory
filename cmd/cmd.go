@@ -14,14 +14,16 @@ import (
 
 const Version = "dev"
 
-// usage is a replacement for usage function in the flag package.
-func usage() {
-	fmt.Fprintf(os.Stderr, "Usage of accessory:\n")
-	fmt.Fprintf(os.Stderr, "\taccessory [flags] [directory]\n")
-	fmt.Fprintf(os.Stderr, "For more information, see:\n")
-	fmt.Fprintf(os.Stderr, "\thttps://github.com/masaushi/accessory\n")
-	fmt.Fprintf(os.Stderr, "Flags:\n")
-	flag.PrintDefaults()
+// newUsage returns a function to replace default usage function of FlagSet.
+func newUsage(flags *flag.FlagSet) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "Usage of accessory:\n")
+		fmt.Fprintf(os.Stderr, "\taccessory [flags] [directory]\n")
+		fmt.Fprintf(os.Stderr, "For more information, see:\n")
+		fmt.Fprintf(os.Stderr, "\thttps://github.com/masaushi/accessory\n")
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		flags.PrintDefaults()
+	}
 }
 
 // Execute executes a whole process of generating accessor codes.
@@ -30,7 +32,7 @@ func Execute(fs afero.Fs, args []string) {
 	log.SetPrefix("accessory: ")
 
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
-	flags.Usage = usage
+	flags.Usage = newUsage(flags)
 	version := flags.Bool("version", false, "show the version of accessory")
 	typeName := flags.String("type", "", "type name; must be set")
 	receiver := flags.String("receiver", "", "receiver name; default first letter of type name")
