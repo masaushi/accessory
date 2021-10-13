@@ -178,7 +178,7 @@ func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
 
 func (g *generator) receiverName(userInput string, structName string) string {
 	if userInput != "" {
-		// Do nothing if receiver name specified with args.
+		// Do nothing if receiver name specified in args.
 		return userInput
 	}
 

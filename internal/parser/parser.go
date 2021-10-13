@@ -112,14 +112,14 @@ func parseFields(st *ast.StructType, fileSet *token.FileSet) []*types.Field {
 }
 
 func parseTag(tag *ast.BasicLit) *types.Tag {
-	accessorTag, ok := reflect.StructTag(strings.Trim(tag.Value, "`")).Lookup(accessorTag)
+	tagStr, ok := reflect.StructTag(strings.Trim(tag.Value, "`")).Lookup(accessorTag)
 	if !ok {
 		return nil
 	}
 
 	var getter, setter *string
 
-	tags := strings.Split(accessorTag, tagSep)
+	tags := strings.Split(tagStr, tagSep)
 	for _, tag := range tags {
 		keyValue := strings.Split(tag, tagKeyValueSep)
 
