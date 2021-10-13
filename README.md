@@ -20,13 +20,13 @@ To get the latest released version
 ### Go version < 1.16
 
 ```bash
-go get github.com/golang/mock/mockgen
+go get github.com/masaushi/accessory
 ```
 
 ### Go 1.16+
 
 ```bash
-go install github.com/golang/mock/mockgen@latest
+go install github.com/masaushi/accessory@latest
 ```
 
 ## Usage
