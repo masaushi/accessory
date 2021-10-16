@@ -40,9 +40,5 @@ archives:
 checksum:
   name_template: "checksum.txt"
 
-changelog:
-  use: github
-  sort: asc
-
 release:
   prerelease: auto
