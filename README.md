@@ -1,5 +1,8 @@
 # accessory
 
+[![test](https://github.com/masaushi/accessory/actions/workflows/test.yml/badge.svg)](https://github.com/masaushi/accessory/actions/workflows/test.yml)
+[![release](https://github.com/masaushi/accessory/actions/workflows/release.yml/badge.svg)](https://github.com/masaushi/accessory/actions/workflows/release.yml)
+
 accessory is an accessor generator for [Go programming language](https://golang.org/).
 
 ## What is accessory?
