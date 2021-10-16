@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/afero"
 
@@ -13,7 +14,7 @@ import (
 )
 
 // Version is the version of `accessory`, injected at build time.
-var Version = "dev"
+var Version = ""
 
 // newUsage returns a function to replace default usage function of FlagSet.
 func newUsage(flags *flag.FlagSet) func() {
@@ -45,7 +46,7 @@ func Execute(fs afero.Fs, args []string) {
 	}
 
 	if *version {
-		fmt.Fprintf(os.Stdout, "accessory version: %s\n", Version)
+		fmt.Fprintf(os.Stdout, "accessory version: %s\n", getVersion())
 		os.Exit(0)
 	}
 
@@ -86,4 +87,17 @@ func isDir(name string) bool {
 		log.Fatal(err)
 	}
 	return info.IsDir()
+}
+
+func getVersion() string {
+	if Version != "" {
+		return Version
+	}
+
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" {
+		return "unknown"
+	}
+
+	return info.Main.Version
 }
