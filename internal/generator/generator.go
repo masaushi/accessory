@@ -128,7 +128,7 @@ func (g *generator) setterGenerator(
 		tpl = `
 			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
 				{{.Receiver}}.{{.LockName}}.Lock()
-				defer {{.Receiver}}.{{.LockName}}.UnLock()
+				defer {{.Receiver}}.{{.LockName}}.Unlock()
 				{{.Receiver}}.{{.Field}} = val
 			}`
 	}
@@ -176,7 +176,7 @@ func (g *generator) getterGenerator(
 		tpl = `
 			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
 				{{.Receiver}}.{{.LockName}}.Lock()
-				defer {{.Receiver}}.{{.LockName}}.UnLock()
+				defer {{.Receiver}}.{{.LockName}}.Unlock()
 				return {{.Receiver}}.{{.Field}}
 			}`
 	}
