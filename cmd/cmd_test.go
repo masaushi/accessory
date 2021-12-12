@@ -46,6 +46,10 @@ func TestExecute(t *testing.T) {
 			cmd:    "accessory -type Tester -receiver tester testdata/with_receiver",
 			output: "testdata/with_receiver/tester_accessor.go",
 		},
+		"WithLock": {
+			cmd:    "accessory -type Tester -lock lock testdata/with_lock",
+			output: "testdata/with_lock/tester_accessor.go",
+		},
 	}
 
 	fs := afero.NewMemMapFs()
