@@ -4,25 +4,25 @@ package test
 
 func (t *Tester) GetField1() string {
 	t.lock.Lock()
-	defer t.lock.UnLock()
+	defer t.lock.Unlock()
 	return t.field1
 }
 
 func (t *Tester) SetField1(val string) {
 	t.lock.Lock()
-	defer t.lock.UnLock()
+	defer t.lock.Unlock()
 	t.field1 = val
 }
 
 func (t *Tester) GetField2() int32 {
 	t.lock.Lock()
-	defer t.lock.UnLock()
+	defer t.lock.Unlock()
 	return t.field2
 }
 
 func (t *Tester) SetField2(val int32) {
 	t.lock.Lock()
-	defer t.lock.UnLock()
+	defer t.lock.Unlock()
 	t.field2 = val
 }
 
