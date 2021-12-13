@@ -20,11 +20,11 @@ type generator struct {
 }
 
 // Generate generates a file and accessor methods in it.
-func Generate(fs afero.Fs, pkg *types.Package, typeName, output, receiverName string) error {
+func Generate(fs afero.Fs, pkg *types.Package, typeName, output, receiverName string, lockName *string) error {
 	g := generator{buf: new(bytes.Buffer)}
 
-	setterGen := g.setterGenerator(receiverName)
-	getterGen := g.getterGenerator(receiverName)
+	setterGen := g.setterGenerator(receiverName, lockName)
+	getterGen := g.getterGenerator(receiverName, lockName)
 
 	accessors := make([]string, 0)
 	imports := make(map[string]string)
@@ -116,11 +116,23 @@ func (g *generator) write(pkgName string, importMap map[string]string, accessors
 
 func (g *generator) setterGenerator(
 	receiverName string,
+	lockName *string,
 ) func(structName string, field *types.Field) (string, error) {
-	const tpl = `
-func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
-	{{.Receiver}}.{{.Field}} = val
-}`
+	var tpl string
+	if lockName == nil {
+		tpl = `
+			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
+				{{.Receiver}}.{{.Field}} = val
+			}`
+	} else {
+		tpl = `
+			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
+				{{.Receiver}}.{{.LockName}}.Lock()
+				defer {{.Receiver}}.{{.LockName}}.Unlock()
+				{{.Receiver}}.{{.Field}} = val
+			}`
+	}
+
 	t := template.Must(template.New("setter").Parse(tpl))
 
 	return func(structName string, field *types.Field) (string, error) {
@@ -129,14 +141,19 @@ func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
 			methodName = fmt.Sprintf("Set%s", strings.Title(field.Name))
 		}
 
-		buf := new(bytes.Buffer)
-		err := t.Execute(buf, map[string]string{
+		m := map[string]string{
 			"Receiver":   g.receiverName(receiverName, structName),
 			"Struct":     structName,
 			"MethodName": methodName,
 			"Field":      field.Name,
 			"Type":       field.DataType,
-		})
+		}
+		if lockName != nil {
+			m["LockName"] = *lockName
+		}
+
+		buf := new(bytes.Buffer)
+		err := t.Execute(buf, m)
 		if err != nil {
 			return "", err
 		}
@@ -147,11 +164,23 @@ func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}(val {{.Type}}) {
 
 func (g *generator) getterGenerator(
 	receiverName string,
+	lockName *string,
 ) func(structName string, field *types.Field) (string, error) {
-	const tpl = `
-func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
-	return {{.Receiver}}.{{.Field}}
-}`
+	var tpl string
+	if lockName == nil {
+		tpl = `
+			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
+				return {{.Receiver}}.{{.Field}}
+			}`
+	} else {
+		tpl = `
+			func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
+				{{.Receiver}}.{{.LockName}}.Lock()
+				defer {{.Receiver}}.{{.LockName}}.Unlock()
+				return {{.Receiver}}.{{.Field}}
+			}`
+	}
+
 	t := template.Must(template.New("getter").Parse(tpl))
 
 	return func(structName string, field *types.Field) (string, error) {
@@ -160,14 +189,19 @@ func ({{.Receiver}} *{{.Struct}}) {{.MethodName}}() {{.Type}} {
 			methodName = strings.Title(field.Name)
 		}
 
-		buf := new(bytes.Buffer)
-		err := t.Execute(buf, map[string]string{
+		m := map[string]string{
 			"Receiver":   g.receiverName(receiverName, structName),
 			"Struct":     structName,
 			"MethodName": methodName,
 			"Field":      field.Name,
 			"Type":       field.DataType,
-		})
+		}
+		if lockName != nil {
+			m["LockName"] = *lockName
+		}
+
+		buf := new(bytes.Buffer)
+		err := t.Execute(buf, m)
 		if err != nil {
 			return "", err
 		}

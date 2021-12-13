@@ -30,13 +30,14 @@ func newUsage(flags *flag.FlagSet) func() {
 
 // Execute executes a whole process of generating accessor codes.
 func Execute(fs afero.Fs, args []string) {
-	log.SetFlags(0)
+	log.SetFlags(0 | log.Lshortfile)
 	log.SetPrefix("accessory: ")
 
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	flags.Usage = newUsage(flags)
 	version := flags.Bool("version", false, "show the version of accessory")
 	typeName := flags.String("type", "", "type name; must be set")
+	lockName := flags.String("lock", "", "lock name")
 	receiver := flags.String("receiver", "", "receiver name; default first letter of type name")
 	output := flags.String("output", "", "output file name; default <type_name>_accessor.go")
 
@@ -53,6 +54,10 @@ func Execute(fs afero.Fs, args []string) {
 	if typeName == nil || len(*typeName) == 0 {
 		flags.Usage()
 		os.Exit(1)
+	}
+
+	if lockName == nil || len(*lockName) == 0 {
+		lockName = nil
 	}
 
 	var dir string
@@ -76,7 +81,7 @@ func Execute(fs afero.Fs, args []string) {
 		os.Exit(1)
 	}
 
-	if err = generator.Generate(fs, pkg, *typeName, *output, *receiver); err != nil {
+	if err = generator.Generate(fs, pkg, *typeName, *output, *receiver, lockName); err != nil {
 		log.Fatal(err)
 	}
 }
