@@ -3,6 +3,9 @@
 package test
 
 func (t *Tester) Field2() int32 {
+	if t == nil {
+		return 0
+	}
 	return t.field2
 }
 

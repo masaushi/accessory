@@ -53,7 +53,10 @@ func TestExecute(t *testing.T) {
 	}
 
 	fs := afero.NewMemMapFs()
-	snapshot := cupaloy.New(cupaloy.SnapshotSubdirectory("testdata/.snapshots"))
+	snapshot := cupaloy.New(
+		cupaloy.SnapshotSubdirectory("testdata/.snapshots"),
+		cupaloy.SnapshotFileExtension(".go"),
+	)
 
 	for name, tt := range tests {
 		tt := tt

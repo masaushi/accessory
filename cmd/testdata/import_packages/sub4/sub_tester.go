@@ -1,4 +1,4 @@
-package sub
+package sub4
 
 type SubTester struct {
 }

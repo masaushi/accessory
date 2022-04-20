@@ -9,8 +9,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/masaushi/accessory/internal/generator"
-	"github.com/masaushi/accessory/internal/parser"
+	"github.com/masaushi/accessory/internal/accessor"
 )
 
 // Version is the version of `accessory`, injected at build time.
@@ -56,10 +55,6 @@ func Execute(fs afero.Fs, args []string) {
 		os.Exit(1)
 	}
 
-	if lockName == nil || len(*lockName) == 0 {
-		lockName = nil
-	}
-
 	var dir string
 	if cliArgs := flags.Args(); len(cliArgs) > 0 {
 		dir = cliArgs[0]
@@ -74,14 +69,21 @@ func Execute(fs afero.Fs, args []string) {
 		os.Exit(1)
 	}
 
-	pkg, err := parser.ParsePackage(dir)
+	pkg, err := accessor.ParsePackage(dir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flags.Usage()
 		os.Exit(1)
 	}
 
-	if err = generator.Generate(fs, pkg, *typeName, *output, *receiver, lockName); err != nil {
+	var options = []accessor.Option{
+		accessor.Type(*typeName),
+		accessor.Output(*output),
+		accessor.Receiver(*receiver),
+		accessor.Lock(*lockName),
+	}
+
+	if err = accessor.Generate(fs, pkg, options...); err != nil {
 		log.Fatal(err)
 	}
 }

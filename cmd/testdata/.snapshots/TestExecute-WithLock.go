@@ -3,6 +3,9 @@
 package test
 
 func (t *Tester) GetField1() string {
+	if t == nil {
+		return ""
+	}
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	return t.field1
@@ -15,6 +18,9 @@ func (t *Tester) SetField1(val string) {
 }
 
 func (t *Tester) GetField2() int32 {
+	if t == nil {
+		return 0
+	}
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	return t.field2
