@@ -109,7 +109,7 @@ func (g *generator) write(pkgName string, imports []*packages.Package, accessors
 		g.printf("import (\n")
 		for _, imp := range imports {
 			if imp.Name == filepath.Base(imp.PkgPath) {
-				g.printf("\t\"%s\"\n", imp.Name)
+				g.printf("\t\"%s\"\n", imp.PkgPath)
 			} else {
 				g.printf("\t%s \"%s\"\n", imp.Name, imp.PkgPath)
 			}
