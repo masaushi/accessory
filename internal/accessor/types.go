@@ -1,4 +1,4 @@
-package objects
+package accessor
 
 import (
 	"go/types"
