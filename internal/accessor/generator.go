@@ -11,6 +11,8 @@ import (
 	"text/template"
 
 	"github.com/spf13/afero"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -201,13 +203,13 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 	if getterName := field.Tag.Getter; getterName != nil && *getterName != "" {
 		getter = *getterName
 	} else {
-		getter = strings.Title(field.Name)
+		getter = cases.Title(language.Und).String(field.Name)
 	}
 
 	if setterName := field.Tag.Setter; setterName != nil && *setterName != "" {
 		setter = *setterName
 	} else {
-		setter = "Set" + strings.Title(field.Name)
+		setter = "Set" + cases.Title(language.Und).String(field.Name)
 	}
 
 	return getter, setter
