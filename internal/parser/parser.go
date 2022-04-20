@@ -1,18 +1,16 @@
 package parser
 
 import (
-	"bytes"
 	"fmt"
-	"go/ast"
-	"go/printer"
 	"go/token"
+	"go/types"
 	"path/filepath"
 	"reflect"
 	"strings"
 
-	"github.com/masaushi/accessory/internal/types"
-
 	"golang.org/x/tools/go/packages"
+
+	"github.com/masaushi/accessory/internal/objects"
 )
 
 const (
@@ -28,7 +26,7 @@ const (
 )
 
 // ParsePackage parses the specified directory's package.
-func ParsePackage(dir string) (*types.Package, error) {
+func ParsePackage(dir string) (*objects.Package, error) {
 	const mode = packages.NeedName | packages.NeedFiles |
 		packages.NeedImports | packages.NeedTypes | packages.NeedSyntax
 
@@ -49,70 +47,49 @@ func ParsePackage(dir string) (*types.Package, error) {
 		return nil, fmt.Errorf("error: %d packages found", len(pkgs))
 	}
 
-	return &types.Package{Dir: dir, Name: pkgs[0].Name, Files: parseFiles(pkgs[0])}, nil
+	return &objects.Package{
+		Package: pkgs[0],
+		Dir:     dir,
+		Structs: parseStructs(pkgs[0]),
+	}, nil
 }
 
-func parseFiles(pkg *packages.Package) []*types.File {
-	files := make([]*types.File, len(pkg.Syntax))
-	for i := range pkg.Syntax {
-		files[i] = &types.File{
-			File:    pkg.Syntax[i],
-			Imports: pkg.Imports,
-			Structs: parseStructs(pkg.Fset, pkg.Syntax[i]),
-		}
-	}
-
-	return files
-}
-
-func parseStructs(fileSet *token.FileSet, file *ast.File) []*types.Struct {
-	structs := make([]*types.Struct, 0)
-
-	ast.Inspect(file, func(n ast.Node) bool {
-		ts, ok := n.(*ast.TypeSpec)
-		if !ok || ts.Type == nil {
-			return true
-		}
-
-		s, ok := ts.Type.(*ast.StructType)
+func parseStructs(pkg *packages.Package) []*objects.Struct {
+	scope := pkg.Types.Scope()
+	structs := make([]*objects.Struct, 0, len(scope.Names()))
+	for _, name := range scope.Names() {
+		st, ok := scope.Lookup(name).Type().Underlying().(*types.Struct)
 		if !ok {
-			return true
+			continue
 		}
 
-		structs = append(structs, &types.Struct{
-			Name:   ts.Name.Name,
-			Fields: parseFields(s, fileSet),
+		structs = append(structs, &objects.Struct{
+			Name:   name,
+			Fields: parseFields(pkg.Fset, st),
 		})
-
-		return false
-	})
+	}
 
 	return structs
 }
 
-func parseFields(st *ast.StructType, fileSet *token.FileSet) []*types.Field {
-	fields := make([]*types.Field, 0)
-	for _, field := range st.Fields.List {
-		if field.Tag == nil {
-			continue
-		}
+func parseFields(fset *token.FileSet, st *types.Struct) []*objects.Field {
+	fields := make([]*objects.Field, st.NumFields())
+	for i := 0; i < st.NumFields(); i++ {
+		tag := parseTag(st.Tag(i))
+		field := st.Field(i)
 
-		name := field.Names[0].Name
-		buf := new(bytes.Buffer)
-		printer.Fprint(buf, fileSet, field.Type)
-		sf := &types.Field{
-			Name:     name,
-			DataType: buf.String(),
-			Tag:      parseTag(field.Tag),
+		fields[i] = &objects.Field{
+			Name: field.Name(),
+			Type: field.Type(),
+			Tag:  tag,
 		}
-		fields = append(fields, sf)
 	}
 
 	return fields
 }
 
-func parseTag(tag *ast.BasicLit) *types.Tag {
-	tagStr, ok := reflect.StructTag(strings.Trim(tag.Value, "`")).Lookup(accessorTag)
+func parseTag(tag string) *objects.Tag {
+	tagStr, ok := reflect.StructTag(strings.Trim(tag, "`")).Lookup(accessorTag)
 	if !ok {
 		return nil
 	}
@@ -137,5 +114,5 @@ func parseTag(tag *ast.BasicLit) *types.Tag {
 		}
 	}
 
-	return &types.Tag{Setter: setter, Getter: getter}
+	return &objects.Tag{Setter: setter, Getter: getter}
 }

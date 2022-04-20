@@ -3,6 +3,9 @@
 package test
 
 func (tester *Tester) Field1() string {
+	if tester == nil {
+		return ""
+	}
 	return tester.field1
 }
 

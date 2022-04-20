@@ -8,6 +8,9 @@ import (
 )
 
 func (t *Tester) Field1() time.Time {
+	if t == nil {
+		return time.Time{}
+	}
 	return t.field1
 }
 

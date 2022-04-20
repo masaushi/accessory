@@ -1,20 +1,14 @@
-package types
+package objects
 
 import (
-	"go/ast"
+	"go/types"
 
 	"golang.org/x/tools/go/packages"
 )
 
 type Package struct {
-	Dir   string
-	Name  string
-	Files []*File
-}
-
-type File struct {
-	File    *ast.File
-	Imports map[string]*packages.Package
+	*packages.Package
+	Dir     string
 	Structs []*Struct
 }
 
@@ -24,9 +18,9 @@ type Struct struct {
 }
 
 type Field struct {
-	Name     string
-	DataType string
-	Tag      *Tag
+	Name string
+	Type types.Type
+	Tag  *Tag
 }
 
 type Tag struct {

@@ -3,10 +3,16 @@
 package test
 
 func (t *Tester) Field1() string {
+	if t == nil {
+		return ""
+	}
 	return t.field1
 }
 
 func (t *Tester) GetSecondField() int32 {
+	if t == nil {
+		return 0
+	}
 	return t.field2
 }
 
