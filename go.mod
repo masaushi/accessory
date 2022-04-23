@@ -3,7 +3,7 @@ module github.com/masaushi/accessory
 go 1.17
 
 require (
-	github.com/bradleyjkemp/cupaloy/v2 v2.6.0
+	github.com/bradleyjkemp/cupaloy/v2 v2.7.0
 	github.com/spf13/afero v1.6.0
 	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.10
