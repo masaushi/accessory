@@ -3,10 +3,16 @@
 package test
 
 func (t *Tester) SetField1(val string) {
+	if t == nil {
+		return
+	}
 	t.field1 = val
 }
 
 func (t *Tester) SetSecondField(val int32) {
+	if t == nil {
+		return
+	}
 	t.field2 = val
 }
 

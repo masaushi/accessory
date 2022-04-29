@@ -12,6 +12,9 @@ func (t *Tester) GetField1() string {
 }
 
 func (t *Tester) SetField1(val string) {
+	if t == nil {
+		return
+	}
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	t.field1 = val
@@ -27,6 +30,9 @@ func (t *Tester) GetField2() int32 {
 }
 
 func (t *Tester) SetField2(val int32) {
+	if t == nil {
+		return
+	}
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	t.field2 = val

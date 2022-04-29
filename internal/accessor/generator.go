@@ -125,6 +125,9 @@ func (g *generator) generateSetter(
 
 	var tpl = `
 	func ({{.Receiver}} *{{.Struct}}) {{.SetterMethod}}(val {{.Type}}) {
+		if {{.Receiver}} == nil {
+			return
+		}
 	` +
 		lockingCode + // inject locing code
 		`{{.Receiver}}.{{.Field}} = val
