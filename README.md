@@ -53,18 +53,30 @@ type MyStruct struct {
 Generated methods will be
 ```go
 func(m *MyStruct) Field1() string {
+    if m == nil {
+        return ""
+    }
     return m.field1
 }
 
 func(m *MyStruct) SetField2(val *int) {
+    if m == nil {
+        return
+    }
     m.field2 = val
 }
 
 func(m *MyStruct) Field3() time.Time {
+    if m == nil {
+        return time.Time{}
+    }
     return m.field3
 }
 
 func(m *MyStruct) SetField3(val time.Time) {
+    if m == nil {
+        return
+    }
     m.field3 = val
 }
 ```
@@ -86,10 +98,16 @@ Generated methods will be
 
 ```go
 func(m *MyStruct) GetFirstField() string {
+    if m == nil {
+        return ""
+    }
     return m.field1
 }
 
 func(m *MyStruct) ChangeSecondField(val *int) {
+    if m == nil {
+        return
+    }
     m.field2 = val
 }
 ```

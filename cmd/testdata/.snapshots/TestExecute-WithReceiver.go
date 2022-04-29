@@ -10,6 +10,9 @@ func (tester *Tester) Field1() string {
 }
 
 func (tester *Tester) SetSecondField(val int32) {
+	if tester == nil {
+		return
+	}
 	tester.field2 = val
 }
 
