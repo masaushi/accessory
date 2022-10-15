@@ -26,16 +26,16 @@ jobs:
           git config --global core.eol lf
 
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
         id: go
 
       - name: Check out codes
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Run lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
           version: v1.49.0
           args: --timeout=5m
