@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
-	github.com/spf13/afero v1.9.2
+	github.com/spf13/afero v1.9.3
 	golang.org/x/text v0.4.0
 	golang.org/x/tools v0.3.0
 )
