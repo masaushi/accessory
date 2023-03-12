@@ -30,6 +30,10 @@ func TestExecute(t *testing.T) {
 			cmd:    "accessory -type Tester testdata/getter_and_setter",
 			output: "testdata/getter_and_setter/tester_accessor.go",
 		},
+		"CamelCaseNodeName": {
+			cmd:    "accessory -type Tester testdata/camel_case_node_name",
+			output: "testdata/camel_case_node_name/tester_accessor.go",
+		},
 		"IgnoreFields": {
 			cmd:    "accessory -type Tester testdata/ignore_fields",
 			output: "testdata/ignore_fields/tester_accessor.go",

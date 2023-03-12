@@ -206,13 +206,13 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 	if getterName := field.Tag.Getter; getterName != nil && *getterName != "" {
 		getter = *getterName
 	} else {
-		getter = cases.Title(language.Und).String(field.Name)
+		getter = cases.Title(language.Und, cases.NoLower).String(field.Name)
 	}
 
 	if setterName := field.Tag.Setter; setterName != nil && *setterName != "" {
 		setter = *setterName
 	} else {
-		setter = "Set" + cases.Title(language.Und).String(field.Name)
+		setter = "Set" + cases.Title(language.Und, cases.NoLower).String(field.Name)
 	}
 
 	return getter, setter
