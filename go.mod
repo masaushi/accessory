@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/spf13/afero v1.9.5
-	golang.org/x/text v0.10.0
+	golang.org/x/text v0.11.0
 	golang.org/x/tools v0.11.0
 )
 
