@@ -1,6 +1,6 @@
 module github.com/masaushi/accessory
 
-go 1.19
+go 1.21
 
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
