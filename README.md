@@ -3,18 +3,12 @@
 [![lint and test](https://github.com/masaushi/accessory/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/masaushi/accessory/actions/workflows/lint_and_test.yml)
 [![release](https://github.com/masaushi/accessory/actions/workflows/release.yml/badge.svg)](https://github.com/masaushi/accessory/actions/workflows/release.yml)
 
-accessory is an accessor generator for [Go programming language](https://golang.org/).
+Accessory is a tool designed for the [Go programming language](https://golang.org/) that automates the generation of accessor methods for struct fields. It helps developers maintain encapsulation by allowing struct fields to be unexported, while still providing controlled access through generated getter and setter methods.
 
-## What is accessory?
-
-Accessory is a tool that generates accessor methods from any structs.
-
-Sometimes you might make struct fields unexported in order for values of fields not to be accessed
-or modified from anywhere in your codebases, and define getters or setters for values to be handled in a desired way.
-
-But writing accessors for so many fields is time-consuming, but not exciting or creative.
-
-Accessory frees you from tedious, monotonous tasks.
+## Why Use Accessory?
+- **Encapsulation**: Keep your struct fields unexported, ensuring they're not accessed or modified unexpectedly.
+- **Automation**: Writing accessors for numerous fields can be repetitive. Accessory automates this task, saving you time.
+- **Customization**: While the tool follows Go conventions by default, you can customize accessor names as needed.
 
 ## Installation
 
@@ -136,13 +130,17 @@ flags
   -type string <required>
       name of target struct
 
-  -receiver string
+  -receiver string <optional>
       receiver receiver for generated accessor methods
       default: first letter of struct
 
-  -output string
+  -output string <optional>
       output file name
       default: <type_name>_accessor.go
+
+  -lock string <optional>
+      specify lock field name and generate codes obtaining and releasing lock
+      this is used to prevent race condition when concurrent access can be expected
 
   -version
       show the current version of accessory
