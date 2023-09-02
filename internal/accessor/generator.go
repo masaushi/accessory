@@ -51,14 +51,8 @@ func newGenerator(fs afero.Fs, pkg *Package, options ...Option) *generator {
 func Generate(fs afero.Fs, pkg *Package, options ...Option) error {
 	g := newGenerator(fs, pkg, options...)
 
-	importMap := make(map[string]*packages.Package, len(pkg.Imports))
-	for _, imp := range pkg.Imports {
-		// temporary assign nil
-		importMap[imp.Name] = imp
-	}
-
 	accessors := make([]string, 0)
-	imports := make([]*packages.Package, 0, len(importMap))
+	usedPkgs := make([]string, 0, len(pkg.Imports))
 
 	for _, st := range pkg.Structs {
 		if st.Name != g.typ {
@@ -87,14 +81,19 @@ func Generate(fs afero.Fs, pkg *Package, options ...Option) error {
 				accessors = append(accessors, setter)
 			}
 
-			if splitted := strings.Split(strings.TrimPrefix(params.Type, "*"), "."); len(splitted) > 1 {
-				otherPackage := splitted[0]
-				imports = append(imports, importMap[otherPackage])
+			replacer := strings.NewReplacer(
+				"[]", "", // trim []
+				"*", "", // trim *
+			)
+			replaced := replacer.Replace(params.Type)
+			if typePaths := strings.Split(replaced, "."); len(typePaths) > 1 {
+				usedPkgs = append(usedPkgs, typePaths[0])
 			}
 		}
 	}
 
-	return g.writer.write(pkg.Name, g.generateImportStrings(imports), accessors)
+	imports := g.generateImportStrings(pkg.Imports, usedPkgs)
+	return g.writer.write(pkg.Name, imports, accessors)
 }
 
 func (g *generator) outputFilePath(dir string) string {
@@ -220,7 +219,7 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 
 func (g *generator) typeName(pkg *types.Package, t types.Type) string {
 	return types.TypeString(t, func(p *types.Package) string {
-		// type is defined in same package
+		// type is defined in the same package
 		if pkg == p {
 			return ""
 		}
@@ -268,20 +267,22 @@ func (g *generator) zeroValue(t types.Type, typeString string) string {
 	return "nil"
 }
 
-func (g *generator) generateImportStrings(pkgs []*packages.Package) []string {
-	// Ensure imports are same order as previous if there are no declaration changes.
-	sort.Slice(pkgs, func(i, j int) bool {
-		return pkgs[i].Name < pkgs[j].Name
-	})
+func (g *generator) generateImportStrings(
+	pkgs map[string]*packages.Package,
+	usedPkgs []string,
+) []string {
+	usedMap := make(map[string]struct{}, 0)
+	for i := range usedPkgs {
+		usedMap[usedPkgs[i]] = struct{}{}
+	}
 
-	imports := make([]string, len(pkgs))
-	for i, pkg := range pkgs {
-		if pkg.Name == filepath.Base(pkg.PkgPath) {
-			imports[i] = pkg.PkgPath
-		} else {
-			imports[i] = fmt.Sprintf("%s \"%s\"", pkg.Name, pkg.PkgPath)
+	imports := make([]string, 0, len(usedMap))
+	for _, pkg := range pkgs {
+		if _, ok := usedMap[pkg.Name]; ok {
+			imports = append(imports, pkg.PkgPath)
 		}
 	}
+	sort.Strings(imports)
 
 	return imports
 }
