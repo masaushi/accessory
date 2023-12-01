@@ -24,6 +24,7 @@ type Field struct {
 }
 
 type Tag struct {
-	Getter *string
-	Setter *string
+	Getter    *string
+	Setter    *string
+	NoDefault bool
 }
