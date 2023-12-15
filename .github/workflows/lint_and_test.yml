@@ -26,18 +26,18 @@ jobs:
           git config --global core.eol lf
 
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
 
       - name: Check out codes
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.1
+          version: v1.55.2
           args: --timeout=5m
 
       - name: Run tests
