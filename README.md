@@ -26,6 +26,11 @@ go get github.com/masaushi/accessory
 go install github.com/masaushi/accessory@latest
 ```
 
+### or Homebrew for macOS or Linux
+```sh
+brew install masaushi/tap/accessory
+```
+
 ## Usage
 
 ### Declare Struct with `accessor` Tag
@@ -114,6 +119,10 @@ type MyStruct struct {
     ignoredField `accessor:"-"`
 }
 ```
+
+### Specify rules for setting value
+You can specify validation rules for each fields.
+We underlying the 
 
 ### Run `accessory` command
 
