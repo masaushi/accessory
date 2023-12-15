@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 
+	templates "github.com/masaushi/accessory/internal/accessor/gotemplates"
 	"github.com/spf13/afero"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -30,6 +31,7 @@ type methodGenParameters struct {
 	Field        string
 	GetterMethod string
 	SetterMethod string
+	NoDefault    bool
 	Type         string
 	ZeroValue    string // used only when generating getter
 	Lock         string
@@ -115,24 +117,7 @@ func (g *generator) outputFilePath(dir string) string {
 func (g *generator) generateSetter(
 	params *methodGenParameters,
 ) (string, error) {
-	var lockingCode string
-	if params.Lock != "" {
-		lockingCode = ` {{.Receiver}}.{{.Lock}}.Lock()
-		defer {{.Receiver}}.{{.Lock}}.Unlock()
-		`
-	}
-
-	var tpl = `
-	func ({{.Receiver}} *{{.Struct}}) {{.SetterMethod}}(val {{.Type}}) {
-		if {{.Receiver}} == nil {
-			return
-		}
-	` +
-		lockingCode + // inject locing code
-		`{{.Receiver}}.{{.Field}} = val
-	}`
-
-	t := template.Must(template.New("setter").Parse(tpl))
+	t := template.Must(template.New("setter").Parse(templates.Setter))
 	buf := new(bytes.Buffer)
 
 	if err := t.Execute(buf, params); err != nil {
@@ -145,24 +130,13 @@ func (g *generator) generateSetter(
 func (g *generator) generateGetter(
 	params *methodGenParameters,
 ) (string, error) {
-	var lockingCode string
-	if params.Lock != "" {
-		lockingCode = `{{.Receiver}}.{{.Lock}}.Lock()
-		defer {{.Receiver}}.{{.Lock}}.Unlock()
-		`
+	// Template
+	var tmpl = templates.Getter
+	if params.NoDefault {
+		tmpl = templates.GetterNoDefault
 	}
 
-	var tpl = `
-	func ({{.Receiver}} *{{.Struct}}) {{.GetterMethod}}() {{.Type}} {
-		if {{.Receiver}} == nil {
-			return {{.ZeroValue}}
-		}
-		` +
-		lockingCode + // inject locing code
-		`return {{.Receiver}}.{{.Field}}
-	}`
-
-	t := template.Must(template.New("getter").Parse(tpl))
+	t := template.Must(template.New("getter").Parse(tmpl))
 	buf := new(bytes.Buffer)
 
 	if err := t.Execute(buf, params); err != nil {
@@ -185,6 +159,7 @@ func (g *generator) setupParameters(
 		Field:        field.Name,
 		GetterMethod: getter,
 		SetterMethod: setter,
+		NoDefault:    field.Tag.NoDefault,
 		Type:         typeName,
 		ZeroValue:    g.zeroValue(field.Type, typeName),
 		Lock:         g.lock,

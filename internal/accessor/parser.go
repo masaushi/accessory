@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	accessorTag  = "accessor"
-	ignoreTag    = "-"
-	tagKeyGetter = "getter"
-	tagKeySetter = "setter"
+	accessorTag     = "accessor"
+	ignoreTag       = "-"
+	tagKeyGetter    = "getter"
+	tagKeySetter    = "setter"
+	tagKeyNoDefault = "noDefault"
 )
 
 const (
@@ -93,6 +94,7 @@ func parseTag(tag string) *Tag {
 	}
 
 	var getter, setter *string
+	var noDefault bool
 
 	tags := strings.Split(tagStr, tagSep)
 	for _, tag := range tags {
@@ -109,8 +111,10 @@ func parseTag(tag string) *Tag {
 			getter = &value
 		case tagKeySetter:
 			setter = &value
+		case tagKeyNoDefault:
+			noDefault = true
 		}
 	}
 
-	return &Tag{Setter: setter, Getter: getter}
+	return &Tag{Setter: setter, Getter: getter, NoDefault: noDefault}
 }

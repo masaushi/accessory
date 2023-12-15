@@ -38,6 +38,10 @@ func TestExecute(t *testing.T) {
 			cmd:    "accessory -type Tester testdata/ignore_fields",
 			output: "testdata/ignore_fields/tester_accessor.go",
 		},
+		"NoDefaultValue": {
+			cmd:    "accessory -type Tester testdata/no_default_value",
+			output: "testdata/no_default_value/tester_accessor.go",
+		},
 		"ImportPackages": {
 			cmd:    "accessory -type Tester testdata/import_packages",
 			output: "testdata/import_packages/tester_accessor.go",
