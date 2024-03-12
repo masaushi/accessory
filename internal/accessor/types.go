@@ -26,5 +26,6 @@ type Field struct {
 type Tag struct {
 	Getter    *string
 	Setter    *string
+	DbColumn  *string
 	NoDefault bool
 }

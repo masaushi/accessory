@@ -10,5 +10,8 @@ func ({{.Receiver}} *{{.Struct}}) {{.SetterMethod}}(val {{.Type}}) {
   defer {{.Receiver}}.{{.Lock}}.Unlock()
   {{- end }}
   {{.Receiver}}.{{.Field}} = val
+  {{- if ne .DbColumn "" }}
+  {{.Receiver}}.markDirty("{{.DbColumn}}")
+  {{- end }}
 }
 `

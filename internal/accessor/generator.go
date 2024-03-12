@@ -31,6 +31,7 @@ type methodGenParameters struct {
 	Field        string
 	GetterMethod string
 	SetterMethod string
+	DbColumn     string
 	NoDefault    bool
 	Type         string
 	ZeroValue    string // used only when generating getter
@@ -152,13 +153,14 @@ func (g *generator) setupParameters(
 	field *Field,
 ) *methodGenParameters {
 	typeName := g.typeName(pkg.Types, field.Type)
-	getter, setter := g.methodNames(field)
+	getter, setter, dbColumn := g.methodNames(field)
 	return &methodGenParameters{
 		Receiver:     g.receiverName(st.Name),
 		Struct:       st.Name,
 		Field:        field.Name,
 		GetterMethod: getter,
 		SetterMethod: setter,
+		DbColumn:     dbColumn,
 		NoDefault:    field.Tag.NoDefault,
 		Type:         typeName,
 		ZeroValue:    g.zeroValue(field.Type, typeName),
@@ -176,7 +178,7 @@ func (g *generator) receiverName(structName string) string {
 	return strings.ToLower(string(structName[0]))
 }
 
-func (g *generator) methodNames(field *Field) (getter, setter string) {
+func (g *generator) methodNames(field *Field) (getter, setter, dbColumn string) {
 	if getterName := field.Tag.Getter; getterName != nil && *getterName != "" {
 		getter = *getterName
 	} else {
@@ -189,7 +191,11 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 		setter = "Set" + cases.Title(language.Und, cases.NoLower).String(field.Name)
 	}
 
-	return getter, setter
+	if dbColumnName := field.Tag.DbColumn; dbColumnName != nil && *dbColumnName != "" && *dbColumnName != "-" {
+		dbColumn = *dbColumnName
+	}
+
+	return getter, setter, dbColumn
 }
 
 func (g *generator) typeName(pkg *types.Package, t types.Type) string {

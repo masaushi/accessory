@@ -13,6 +13,7 @@ import (
 
 const (
 	accessorTag     = "accessor"
+	dbTag           = "db"
 	ignoreTag       = "-"
 	tagKeyGetter    = "getter"
 	tagKeySetter    = "setter"
@@ -93,7 +94,7 @@ func parseTag(tag string) *Tag {
 		return nil
 	}
 
-	var getter, setter *string
+	var getter, setter, dbColumn *string
 	var noDefault bool
 
 	tags := strings.Split(tagStr, tagSep)
@@ -116,5 +117,16 @@ func parseTag(tag string) *Tag {
 		}
 	}
 
-	return &Tag{Setter: setter, Getter: getter, NoDefault: noDefault}
+	dbTagStr, ok := reflect.StructTag(strings.Trim(tag, "`")).Lookup(dbTag)
+	if !ok {
+		return nil
+	}
+
+	dbtags := strings.Split(dbTagStr, tagSep)
+	if len(dbtags) < 1 {
+		return nil
+	}
+	dbColumn = &dbtags[0]
+
+	return &Tag{Setter: setter, Getter: getter, NoDefault: noDefault, DbColumn: dbColumn}
 }
