@@ -69,7 +69,7 @@ func Execute(fs afero.Fs, args []string) {
 		os.Exit(1)
 	}
 
-	pkg, err := accessor.ParsePackage(dir)
+	src, err := accessor.Parse(dir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flags.Usage()
@@ -83,7 +83,7 @@ func Execute(fs afero.Fs, args []string) {
 		accessor.Lock(*lockName),
 	}
 
-	if err = accessor.Generate(fs, pkg, options...); err != nil {
+	if err = accessor.Generate(fs, src, options...); err != nil {
 		log.Fatal(err)
 	}
 }

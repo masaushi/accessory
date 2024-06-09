@@ -6,7 +6,7 @@ import (
 	"go/types"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -18,11 +18,17 @@ import (
 )
 
 type generator struct {
-	writer   *writer
+	writer *writer
+
 	typ      string
 	output   string
 	receiver string
 	lock     string
+
+	pkg     *packages.Package
+	imports []*Import
+
+	usedPackages map[string]struct{}
 }
 
 type methodGenParameters struct {
@@ -37,72 +43,39 @@ type methodGenParameters struct {
 	Lock         string
 }
 
-func newGenerator(fs afero.Fs, pkg *Package, options ...Option) *generator {
-	g := new(generator)
+func newGenerator(fs afero.Fs, src *ParsedSource, options ...Option) *generator {
+	g := new(generator) // Create a new generator
 	for _, opt := range options {
 		opt(g)
 	}
 
-	path := g.outputFilePath(pkg.Dir)
+	path := g.outputFilePath(src.Dir)
 	g.writer = newWriter(fs, path)
 
-	return g
+	g.pkg = src.Package
+	g.imports = src.Imports
+	g.usedPackages = make(map[string]struct{})
+
+	return g // Return the initialized generator
 }
 
 // Generate generates a file and accessor methods.
-func Generate(fs afero.Fs, pkg *Package, options ...Option) error {
-	g := newGenerator(fs, pkg, options...)
+func Generate(fs afero.Fs, src *ParsedSource, options ...Option) error {
+	g := newGenerator(fs, src, options...)
 
-	accessors := make([]string, 0)
-	usedPkgs := make([]string, 0, len(pkg.Imports))
-
-	for _, st := range pkg.Structs {
-		if st.Name != g.typ {
-			continue
-		}
-
-		for _, field := range st.Fields {
-			if field.Tag == nil {
-				continue
-			}
-
-			params := g.setupParameters(pkg, st, field)
-
-			if field.Tag.Getter != nil {
-				getter, err := g.generateGetter(params)
-				if err != nil {
-					return err
-				}
-				accessors = append(accessors, getter)
-			}
-			if field.Tag.Setter != nil {
-				setter, err := g.generateSetter(params)
-				if err != nil {
-					return err
-				}
-				accessors = append(accessors, setter)
-			}
-
-			replacer := strings.NewReplacer(
-				"[]", "", // trim []
-				"*", "", // trim *
-			)
-			replaced := replacer.Replace(params.Type)
-			if typePaths := strings.Split(replaced, "."); len(typePaths) > 1 {
-				usedPkgs = append(usedPkgs, typePaths[0])
-			}
-		}
+	accessors, err := g.generateAccessors(src.Structs)
+	if err != nil {
+		return err
 	}
 
-	imports := g.generateImportStrings(pkg.Imports, usedPkgs)
-	return g.writer.write(pkg.Name, imports, accessors)
+	imports := g.generateImports()
+
+	return g.writer.write(src.Package.Name, imports, accessors)
 }
 
 func (g *generator) outputFilePath(dir string) string {
 	output := g.output
 	if output == "" {
-		// Use snake_case name of type as output file if output file is not specified.
-		// type TestStruct will be test_struct_accessor.go
 		var firstCapMatcher = regexp.MustCompile("(.)([A-Z][a-z]+)")
 		var articleCapMatcher = regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -112,6 +85,62 @@ func (g *generator) outputFilePath(dir string) string {
 	}
 
 	return filepath.Join(dir, output)
+}
+
+func (g *generator) generateImports() []string {
+	importStrings := make([]string, 0, len(g.imports))
+
+	for _, imp := range g.imports {
+		if _, ok := g.usedPackages[imp.Path]; !ok {
+			continue
+		}
+
+		importString := fmt.Sprintf("%q", imp.Path)
+		if imp.IsNamed {
+			importString = imp.Name + " " + importString
+		}
+
+		importStrings = append(importStrings, importString)
+	}
+	return importStrings
+}
+
+func (g *generator) generateAccessors(structs []*Struct) ([]string, error) {
+	accessors := make([]string, 0)
+
+	for _, st := range structs {
+		if st.Name != g.typ {
+			continue
+		}
+
+		for _, field := range st.Fields {
+			if field.Tag == nil {
+				continue
+			}
+
+			params := g.createMethodGenParameters(st, field)
+
+			if field.Tag.Getter != nil {
+				getter, err := g.generateGetter(params)
+				if err != nil {
+					return nil, err
+				}
+				accessors = append(accessors, getter)
+			}
+			if field.Tag.Setter != nil {
+				setter, err := g.generateSetter(params)
+				if err != nil {
+					return nil, err
+				}
+				accessors = append(accessors, setter)
+			}
+
+			usedPackage := g.getUsedPackages(field)
+			g.usedPackages[usedPackage] = struct{}{}
+		}
+	}
+
+	return accessors, nil
 }
 
 func (g *generator) generateSetter(
@@ -146,12 +175,8 @@ func (g *generator) generateGetter(
 	return buf.String(), nil
 }
 
-func (g *generator) setupParameters(
-	pkg *Package,
-	st *Struct,
-	field *Field,
-) *methodGenParameters {
-	typeName := g.typeName(pkg.Types, field.Type)
+func (g *generator) createMethodGenParameters(st *Struct, field *Field) *methodGenParameters {
+	typeName := g.typeName(field.Type)
 	getter, setter := g.methodNames(field)
 	return &methodGenParameters{
 		Receiver:     g.receiverName(st.Name),
@@ -164,6 +189,16 @@ func (g *generator) setupParameters(
 		ZeroValue:    g.zeroValue(field.Type, typeName),
 		Lock:         g.lock,
 	}
+}
+
+func (g *generator) getUsedPackages(field *Field) string {
+	var typePackage string
+	types.TypeString(field.Type, func(p *types.Package) string {
+		typePackage = p.Path()
+		return ""
+	})
+
+	return typePackage
 }
 
 func (g *generator) receiverName(structName string) string {
@@ -192,14 +227,24 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 	return getter, setter
 }
 
-func (g *generator) typeName(pkg *types.Package, t types.Type) string {
+func (g *generator) typeName(t types.Type) string {
 	return types.TypeString(t, func(p *types.Package) string {
 		// type is defined in the same package
-		if pkg == p {
-			return ""
+		if g.pkg.Types == p {
+			return "" // return an empty string
 		}
 		// path string(like example.com/user/project/package) into slice
-		return p.Name()
+		idx := slices.IndexFunc(g.imports, func(imp *Import) bool {
+			return imp.Path == p.Path()
+		})
+
+		imp := g.imports[idx]
+
+		if imp.Name == "." {
+			return "" // return an empty string
+		}
+
+		return imp.Name
 	})
 }
 
@@ -240,24 +285,4 @@ func (g *generator) zeroValue(t types.Type, typeString string) string {
 	}
 
 	return "nil"
-}
-
-func (g *generator) generateImportStrings(
-	pkgs map[string]*packages.Package,
-	usedPkgs []string,
-) []string {
-	usedMap := make(map[string]struct{}, 0)
-	for i := range usedPkgs {
-		usedMap[usedPkgs[i]] = struct{}{}
-	}
-
-	imports := make([]string, 0, len(usedMap))
-	for _, pkg := range pkgs {
-		if _, ok := usedMap[pkg.Name]; ok {
-			imports = append(imports, pkg.PkgPath)
-		}
-	}
-	sort.Strings(imports)
-
-	return imports
 }
