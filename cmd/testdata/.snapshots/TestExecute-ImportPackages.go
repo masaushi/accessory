@@ -4,8 +4,8 @@ package test
 
 import (
 	"github.com/masaushi/accessory/cmd/testdata/import_packages/sub1"
-	"github.com/masaushi/accessory/cmd/testdata/import_packages/sub2"
-	"github.com/masaushi/accessory/cmd/testdata/import_packages/sub3"
+	sub "github.com/masaushi/accessory/cmd/testdata/import_packages/sub2"
+	. "github.com/masaushi/accessory/cmd/testdata/import_packages/sub3"
 	"time"
 )
 
@@ -51,56 +51,56 @@ func (t *Tester) SetField3(val *sub1.SubTester) {
 	t.field3 = val
 }
 
-func (t *Tester) Field4() *sub2.SubTester {
+func (t *Tester) Field4() *sub.SubTester {
 	if t == nil {
 		return nil
 	}
 	return t.field4
 }
 
-func (t *Tester) SetField4(val *sub2.SubTester) {
+func (t *Tester) SetField4(val *sub.SubTester) {
 	if t == nil {
 		return
 	}
 	t.field4 = val
 }
 
-func (t *Tester) Field5() *sub3.SubTester {
+func (t *Tester) Field5() *SubTester {
 	if t == nil {
 		return nil
 	}
 	return t.field5
 }
 
-func (t *Tester) SetField5(val *sub3.SubTester) {
+func (t *Tester) SetField5(val *SubTester) {
 	if t == nil {
 		return
 	}
 	t.field5 = val
 }
 
-func (t *Tester) Field6() []sub2.SubTester {
+func (t *Tester) Field6() []sub.SubTester {
 	if t == nil {
 		return nil
 	}
 	return t.field6
 }
 
-func (t *Tester) SetField6(val []sub2.SubTester) {
+func (t *Tester) SetField6(val []sub.SubTester) {
 	if t == nil {
 		return
 	}
 	t.field6 = val
 }
 
-func (t *Tester) Field7() []*sub2.SubTester {
+func (t *Tester) Field7() []*sub.SubTester {
 	if t == nil {
 		return nil
 	}
 	return t.field7
 }
 
-func (t *Tester) SetField7(val []*sub2.SubTester) {
+func (t *Tester) SetField7(val []*sub.SubTester) {
 	if t == nil {
 		return
 	}
