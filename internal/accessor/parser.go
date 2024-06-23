@@ -2,7 +2,6 @@ package accessor
 
 import (
 	"fmt"
-	"go/token"
 	"go/types"
 	"path/filepath"
 	"reflect"
@@ -24,8 +23,7 @@ const (
 	tagKeyValueSep = ":"
 )
 
-// ParsePackage parses the specified directory's package.
-func ParsePackage(dir string) (*Package, error) {
+func Parse(dir string) (*ParsedSource, error) {
 	const mode = packages.NeedName | packages.NeedFiles |
 		packages.NeedImports | packages.NeedTypes | packages.NeedSyntax
 
@@ -46,11 +44,37 @@ func ParsePackage(dir string) (*Package, error) {
 		return nil, fmt.Errorf("error: %d packages found", len(pkgs))
 	}
 
-	return &Package{
+	return &ParsedSource{
 		Package: pkgs[0],
 		Dir:     dir,
+		Imports: parseImports(pkgs[0]),
 		Structs: parseStructs(pkgs[0]),
 	}, nil
+}
+
+func parseImports(pkg *packages.Package) []*Import {
+	imports := make([]*Import, len(pkg.Syntax[0].Imports))
+
+	for i, imp := range pkg.Syntax[0].Imports {
+		// Extract the path from the import. Remove the leading and trailing quotes.
+		path := strings.Trim(imp.Path.Value, "\"")
+
+		// Extract the name from the import. If the import is not named, use the base name of the path.
+		name := filepath.Base(path)
+		isNamed := false
+		if imp.Name != nil {
+			name = imp.Name.Name
+			isNamed = true
+		}
+
+		imports[i] = &Import{
+			Name:    name,
+			Path:    path,
+			IsNamed: isNamed,
+		}
+	}
+
+	return imports
 }
 
 func parseStructs(pkg *packages.Package) []*Struct {
@@ -64,14 +88,14 @@ func parseStructs(pkg *packages.Package) []*Struct {
 
 		structs = append(structs, &Struct{
 			Name:   name,
-			Fields: parseFields(pkg.Fset, st),
+			Fields: parseFields(st),
 		})
 	}
 
 	return structs
 }
 
-func parseFields(fset *token.FileSet, st *types.Struct) []*Field {
+func parseFields(st *types.Struct) []*Field {
 	fields := make([]*Field, st.NumFields())
 	for i := 0; i < st.NumFields(); i++ {
 		tag := parseTag(st.Tag(i))

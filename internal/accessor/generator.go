@@ -44,7 +44,7 @@ type methodGenParameters struct {
 }
 
 func newGenerator(fs afero.Fs, src *ParsedSource, options ...Option) *generator {
-	g := new(generator) // Create a new generator
+	g := new(generator)
 	for _, opt := range options {
 		opt(g)
 	}
@@ -56,26 +56,32 @@ func newGenerator(fs afero.Fs, src *ParsedSource, options ...Option) *generator 
 	g.imports = src.Imports
 	g.usedPackages = make(map[string]struct{})
 
-	return g // Return the initialized generator
+	return g
 }
 
-// Generate generates a file and accessor methods.
 func Generate(fs afero.Fs, src *ParsedSource, options ...Option) error {
 	g := newGenerator(fs, src, options...)
 
+	// Generate accessor methods for the specified type.
 	accessors, err := g.generateAccessors(src.Structs)
 	if err != nil {
 		return err
 	}
 
+	// Generate import statements for used packages.
 	imports := g.generateImports()
 
+	// Write the generated content to the file system.
 	return g.writer.write(src.Package.Name, imports, accessors)
 }
 
 func (g *generator) outputFilePath(dir string) string {
 	output := g.output
+	// If output file path is not specified, use snake_case name of the type as output file.
 	if output == "" {
+		// Convert the first letter of the type to lowercase and replace all uppercase letters
+		// followed by lowercase letters with the lowercase letter preceded by an underscore.
+		// For example, "TestStruct" becomes "test_struct".
 		var firstCapMatcher = regexp.MustCompile("(.)([A-Z][a-z]+)")
 		var articleCapMatcher = regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -97,11 +103,13 @@ func (g *generator) generateImports() []string {
 
 		importString := fmt.Sprintf("%q", imp.Path)
 		if imp.IsNamed {
+			// If the import is named, add the name before the path.
 			importString = imp.Name + " " + importString
 		}
 
 		importStrings = append(importStrings, importString)
 	}
+
 	return importStrings
 }
 
@@ -109,6 +117,7 @@ func (g *generator) generateAccessors(structs []*Struct) ([]string, error) {
 	accessors := make([]string, 0)
 
 	for _, st := range structs {
+		// Check if the struct name matches the type name of the generator.
 		if st.Name != g.typ {
 			continue
 		}
@@ -202,12 +211,12 @@ func (g *generator) getUsedPackages(field *Field) string {
 }
 
 func (g *generator) receiverName(structName string) string {
+	// If a receiver name is specified in the arguments, use it.
 	if g.receiver != "" {
-		// Do nothing if receiver name specified in args.
 		return g.receiver
 	}
 
-	// Use the first letter of struct as receiver if receiver name is not specified.
+	// If no receiver name is specified, use the first letter of the struct name as receiver.
 	return strings.ToLower(string(structName[0]))
 }
 
@@ -215,12 +224,16 @@ func (g *generator) methodNames(field *Field) (getter, setter string) {
 	if getterName := field.Tag.Getter; getterName != nil && *getterName != "" {
 		getter = *getterName
 	} else {
+		// If no getter name is specified in the tag,
+		// use the field name capitalized as the getter name.
 		getter = cases.Title(language.Und, cases.NoLower).String(field.Name)
 	}
 
 	if setterName := field.Tag.Setter; setterName != nil && *setterName != "" {
 		setter = *setterName
 	} else {
+		// If no setter name is specified in the tag,
+		// use "Set" concatenated with the field name capitalized as the setter name.
 		setter = "Set" + cases.Title(language.Und, cases.NoLower).String(field.Name)
 	}
 
@@ -233,15 +246,17 @@ func (g *generator) typeName(t types.Type) string {
 		if g.pkg.Types == p {
 			return "" // return an empty string
 		}
-		// path string(like example.com/user/project/package) into slice
+
 		idx := slices.IndexFunc(g.imports, func(imp *Import) bool {
 			return imp.Path == p.Path()
 		})
 
+		// get the import statement for the package that the type is defined in
 		imp := g.imports[idx]
 
 		if imp.Name == "." {
-			return "" // return an empty string
+			// return an empty string if the type is defined in the current package
+			return ""
 		}
 
 		return imp.Name

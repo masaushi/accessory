@@ -35,7 +35,7 @@ func (w *writer) write(pkgName string, imports []string, accessors []string) err
 	if len(imports) > 0 {
 		w.printf("import (\n")
 		for i := range imports {
-			w.printf("\t\"%s\"\n", imports[i])
+			w.printf("\t%s\n", imports[i])
 		}
 		w.printf(")\n")
 	}
