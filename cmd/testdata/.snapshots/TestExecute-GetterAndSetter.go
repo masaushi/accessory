@@ -30,3 +30,17 @@ func (t *Tester) SetSecondField(val int32) {
 	t.field2 = val
 }
 
+func (t *Tester) Field4() string {
+	if t == nil {
+		return ""
+	}
+	return t.Field4
+}
+
+func (t *Tester) SetField4(val string) {
+	if t == nil {
+		return
+	}
+	t.Field4 = val
+}
+

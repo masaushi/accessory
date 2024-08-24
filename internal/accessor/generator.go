@@ -251,6 +251,11 @@ func (g *generator) typeName(t types.Type) string {
 			return imp.Path == p.Path()
 		})
 
+		// can't find the type in the imports
+		if idx == -1 {
+			return ""
+		}
+
 		// get the import statement for the package that the type is defined in
 		imp := g.imports[idx]
 
