@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/spf13/afero v1.11.0
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.18.0
 	golang.org/x/tools v0.24.0
 )
 
