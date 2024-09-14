@@ -1,6 +1,8 @@
 module github.com/masaushi/accessory
 
-go 1.21
+go 1.23
+
+toolchain go1.23.0
 
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
