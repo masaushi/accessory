@@ -58,6 +58,10 @@ func TestExecute(t *testing.T) {
 			cmd:    "accessory -type Tester -lock lock testdata/with_lock",
 			output: "testdata/with_lock/tester_accessor.go",
 		},
+		"TimeField": {
+			cmd:    "accessory -type Tester testdata/time_field",
+			output: "testdata/time_field/tester_accessor.go",
+		},
 	}
 
 	fs := afero.NewMemMapFs()
