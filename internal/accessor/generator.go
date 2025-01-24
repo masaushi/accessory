@@ -144,8 +144,9 @@ func (g *generator) generateAccessors(structs []*Struct) ([]string, error) {
 				accessors = append(accessors, setter)
 			}
 
-			usedPackage := g.getUsedPackages(field)
-			g.usedPackages[usedPackage] = struct{}{}
+			if usedPackage := g.getUsedPackages(field); usedPackage != "" {
+				g.usedPackages[usedPackage] = struct{}{}
+			}
 		}
 	}
 
@@ -251,9 +252,9 @@ func (g *generator) typeName(t types.Type) string {
 			return imp.Path == p.Path()
 		})
 
-		// can't find the type in the imports
+		// If the package is not in imports but is a valid package, use its name
 		if idx == -1 {
-			return ""
+			return p.Name()
 		}
 
 		// get the import statement for the package that the type is defined in
@@ -264,7 +265,11 @@ func (g *generator) typeName(t types.Type) string {
 			return ""
 		}
 
-		return imp.Name
+		// If import has an alias, use it, otherwise use package name
+		if imp.Name != "" {
+			return imp.Name
+		}
+		return p.Name()
 	})
 }
 
