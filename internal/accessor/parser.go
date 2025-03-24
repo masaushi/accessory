@@ -5,6 +5,7 @@ import (
 	"go/types"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -53,24 +54,31 @@ func Parse(dir string) (*ParsedSource, error) {
 }
 
 func parseImports(pkg *packages.Package) []*Import {
-	imports := make([]*Import, len(pkg.Syntax[0].Imports))
+	var imports []*Import
 
-	for i, imp := range pkg.Syntax[0].Imports {
-		// Extract the path from the import. Remove the leading and trailing quotes.
-		path := strings.Trim(imp.Path.Value, "\"")
+	for _, syntax := range pkg.Syntax {
+		for _, imp := range syntax.Imports {
+			// Extract the path from the import. Remove the leading and trailing quotes.
+			path := strings.Trim(imp.Path.Value, "\"")
 
-		// Extract the name from the import. If the import is not named, use the base name of the path.
-		name := filepath.Base(path)
-		isNamed := false
-		if imp.Name != nil {
-			name = imp.Name.Name
-			isNamed = true
-		}
-
-		imports[i] = &Import{
-			Name:    name,
-			Path:    path,
-			IsNamed: isNamed,
+			// Extract the name from the import. If the import is not named, use the base name of the path.
+			name := filepath.Base(path)
+			isNamed := false
+			if imp.Name != nil {
+				name = imp.Name.Name
+				isNamed = true
+			}
+			if !slices.ContainsFunc(imports, func(imp *Import) bool {
+				return imp.Name == name &&
+					imp.Path == path &&
+					imp.IsNamed == isNamed
+			}) {
+				imports = append(imports, &Import{
+					Name:    name,
+					Path:    path,
+					IsNamed: isNamed,
+				})
+			}
 		}
 	}
 
