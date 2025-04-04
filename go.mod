@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
-	github.com/spf13/afero v1.12.0
+	github.com/spf13/afero v1.14.0
 	golang.org/x/text v0.23.0
 	golang.org/x/tools v0.31.0
 )
