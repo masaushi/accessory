@@ -46,7 +46,9 @@ func Execute(fs afero.Fs, args []string) {
 	}
 
 	if *version {
-		fmt.Fprintf(os.Stdout, "accessory version: %s\n", getVersion())
+		if _, err := fmt.Fprintf(os.Stdout, "accessory version: %s\n", getVersion()); err != nil {
+			log.Fatal(err)
+		}
 		os.Exit(0)
 	}
 
