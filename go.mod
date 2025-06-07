@@ -6,7 +6,7 @@ require (
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/spf13/afero v1.14.0
 	golang.org/x/text v0.26.0
-	golang.org/x/tools v0.33.0
+	golang.org/x/tools v0.34.0
 )
 
 require (
