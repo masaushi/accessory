@@ -41,6 +41,7 @@ type methodGenParameters struct {
 	Type         string
 	ZeroValue    string // used only when generating getter
 	Lock         string
+	LockType     LockType
 }
 
 func newGenerator(fs afero.Fs, src *ParsedSource, options ...Option) *generator {
@@ -82,8 +83,8 @@ func (g *generator) outputFilePath(dir string) string {
 		// Convert the first letter of the type to lowercase and replace all uppercase letters
 		// followed by lowercase letters with the lowercase letter preceded by an underscore.
 		// For example, "TestStruct" becomes "test_struct".
-		var firstCapMatcher = regexp.MustCompile("(.)([A-Z][a-z]+)")
-		var articleCapMatcher = regexp.MustCompile("([a-z0-9])([A-Z])")
+		firstCapMatcher := regexp.MustCompile("(.)([A-Z][a-z]+)")
+		articleCapMatcher := regexp.MustCompile("([a-z0-9])([A-Z])")
 
 		name := firstCapMatcher.ReplaceAllString(g.typ, "${1}_${2}")
 		name = articleCapMatcher.ReplaceAllString(name, "${1}_${2}")
@@ -169,7 +170,7 @@ func (g *generator) generateGetter(
 	params *methodGenParameters,
 ) (string, error) {
 	// Template
-	var tmpl = templates.Getter
+	tmpl := templates.Getter
 	if params.NoDefault {
 		tmpl = templates.GetterNoDefault
 	}
@@ -197,6 +198,7 @@ func (g *generator) createMethodGenParameters(st *Struct, field *Field) *methodG
 		Type:         typeName,
 		ZeroValue:    g.zeroValue(field.Type, typeName),
 		Lock:         g.lock,
+		LockType:     st.LockType,
 	}
 }
 

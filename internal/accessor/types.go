@@ -23,8 +23,9 @@ type Import struct {
 
 // Struct contains the information of a struct.
 type Struct struct {
-	Name   string
-	Fields []*Field
+	Name     string
+	Fields   []*Field
+	LockType LockType
 }
 
 // Field contains the information of a field in a struct.
@@ -40,3 +41,12 @@ type Tag struct {
 	Setter    *string
 	NoDefault bool
 }
+
+// LockType represents the type of lock used in a struct.
+type LockType string
+
+const (
+	LockTypeNone    LockType = "none"
+	LockTypeMutex   LockType = "mutex"
+	LockTypeRWMutex LockType = "rwmutex"
+)

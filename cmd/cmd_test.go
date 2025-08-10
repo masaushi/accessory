@@ -58,6 +58,10 @@ func TestExecute(t *testing.T) {
 			cmd:    "accessory -type Tester -lock lock testdata/with_lock",
 			output: "testdata/with_lock/tester_accessor.go",
 		},
+		"WithRWMutex": {
+			cmd:    "accessory -type Tester -lock lock testdata/with_rwmutex",
+			output: "testdata/with_rwmutex/tester_accessor.go",
+		},
 	}
 
 	fs := afero.NewMemMapFs()
