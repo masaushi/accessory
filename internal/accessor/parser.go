@@ -95,12 +95,36 @@ func parseStructs(pkg *packages.Package) []*Struct {
 		}
 
 		structs = append(structs, &Struct{
-			Name:   name,
-			Fields: parseFields(st),
+			Name:     name,
+			Fields:   parseFields(st),
+			LockType: detectLockType(st),
 		})
 	}
 
 	return structs
+}
+
+// detectLockType determines the type of lock used in a struct by examining its fields.
+func detectLockType(st *types.Struct) LockType {
+	for i := 0; i < st.NumFields(); i++ {
+		field := st.Field(i)
+		fieldType := field.Type()
+
+		// Check if the field type is a named type
+		if named, ok := fieldType.(*types.Named); ok {
+			// Check if it's sync.RWMutex
+			if pkg := named.Obj().Pkg(); pkg != nil && pkg.Name() == "sync" {
+				if named.Obj().Name() == "RWMutex" {
+					return LockTypeRWMutex
+				}
+				if named.Obj().Name() == "Mutex" {
+					return LockTypeMutex
+				}
+			}
+		}
+	}
+
+	return LockTypeNone
 }
 
 func parseFields(st *types.Struct) []*Field {
