@@ -61,6 +61,10 @@ func parseImports(pkg *packages.Package) []*Import {
 			// Extract the path from the import. Remove the leading and trailing quotes.
 			path := strings.Trim(imp.Path.Value, "\"")
 
+			isAlreadyParsed := func(imp *Import) bool {
+				return imp.Path == path
+
+			}
 			// Extract the name from the import. If the import is not named, use the base name of the path.
 			name := filepath.Base(path)
 			isNamed := false
@@ -68,17 +72,19 @@ func parseImports(pkg *packages.Package) []*Import {
 				name = imp.Name.Name
 				isNamed = true
 			}
-			if !slices.ContainsFunc(imports, func(imp *Import) bool {
-				return imp.Name == name &&
-					imp.Path == path &&
-					imp.IsNamed == isNamed
-			}) {
+			if !slices.ContainsFunc(imports, isAlreadyParsed) {
 				imports = append(imports, &Import{
 					Name:    name,
 					Path:    path,
 					IsNamed: isNamed,
 				})
+			} else {
+				if index := slices.IndexFunc(imports, isAlreadyParsed); !imports[index].IsNamed {
+					imports[index].Name = name
+					imports[index].IsNamed = isNamed
+				}
 			}
+
 		}
 	}
 
