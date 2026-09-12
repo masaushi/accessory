@@ -37,9 +37,10 @@ type Field struct {
 
 // Tag contains the information of a struct field's tag.
 type Tag struct {
-	Getter    *string
-	Setter    *string
-	NoDefault bool
+	Getter         *string
+	Setter         *string
+	NoDefault      bool
+	ReturnReceiver bool
 }
 
 // LockType represents the type of lock used in a struct.

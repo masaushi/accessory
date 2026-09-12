@@ -32,16 +32,17 @@ type generator struct {
 }
 
 type methodGenParameters struct {
-	Receiver     string
-	Struct       string
-	Field        string
-	GetterMethod string
-	SetterMethod string
-	NoDefault    bool
-	Type         string
-	ZeroValue    string // used only when generating getter
-	Lock         string
-	LockType     LockType
+	Receiver       string
+	Struct         string
+	Field          string
+	GetterMethod   string
+	SetterMethod   string
+	NoDefault      bool
+	ReturnReceiver bool
+	Type           string
+	ZeroValue      string // used only when generating getter
+	Lock           string
+	LockType       LockType
 }
 
 func newGenerator(fs afero.Fs, src *ParsedSource, options ...Option) *generator {
@@ -189,16 +190,17 @@ func (g *generator) createMethodGenParameters(st *Struct, field *Field) *methodG
 	typeName := g.typeName(field.Type)
 	getter, setter := g.methodNames(field)
 	return &methodGenParameters{
-		Receiver:     g.receiverName(st.Name),
-		Struct:       st.Name,
-		Field:        field.Name,
-		GetterMethod: getter,
-		SetterMethod: setter,
-		NoDefault:    field.Tag.NoDefault,
-		Type:         typeName,
-		ZeroValue:    g.zeroValue(field.Type, typeName),
-		Lock:         g.lock,
-		LockType:     st.LockType,
+		Receiver:       g.receiverName(st.Name),
+		Struct:         st.Name,
+		Field:          field.Name,
+		GetterMethod:   getter,
+		SetterMethod:   setter,
+		NoDefault:      field.Tag.NoDefault,
+		ReturnReceiver: field.Tag.ReturnReceiver,
+		Type:           typeName,
+		ZeroValue:      g.zeroValue(field.Type, typeName),
+		Lock:           g.lock,
+		LockType:       st.LockType,
 	}
 }
 

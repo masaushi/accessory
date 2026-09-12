@@ -17,6 +17,7 @@ const (
 	tagKeyGetter    = "getter"
 	tagKeySetter    = "setter"
 	tagKeyNoDefault = "noDefault"
+	returnReceiver  = "returnReceiver"
 )
 
 const (
@@ -157,18 +158,20 @@ func parseTag(tag string) *Tag {
 
 	var getter, setter *string
 	var noDefault bool
+	var isReturnReceiver bool
 
 	tags := strings.Split(tagStr, tagSep)
 	for _, tag := range tags {
 		keyValue := strings.Split(tag, tagKeyValueSep)
 
+		tagKey := strings.TrimSpace(keyValue[0])
 		var value string
 		if len(keyValue) == 2 {
 			if v := strings.TrimSpace(keyValue[1]); v != ignoreTag {
 				value = v
 			}
 		}
-		switch strings.TrimSpace(keyValue[0]) {
+		switch tagKey {
 		case tagKeyGetter:
 			getter = &value
 		case tagKeySetter:
@@ -176,7 +179,12 @@ func parseTag(tag string) *Tag {
 		case tagKeyNoDefault:
 			noDefault = true
 		}
-	}
 
-	return &Tag{Setter: setter, Getter: getter, NoDefault: noDefault}
+		if tagKey == tagKeySetter && len(keyValue) == 3 {
+			if v := strings.TrimSpace(keyValue[2]); v == returnReceiver {
+				isReturnReceiver = true
+			}
+		}
+	}
+	return &Tag{Setter: setter, Getter: getter, NoDefault: noDefault, ReturnReceiver: isReturnReceiver}
 }

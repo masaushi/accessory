@@ -1,3 +1,5 @@
+**THIS IS FORKED FROM [github.com/masaushi/accessory](https://github.com/masaushi/accessory).**
+
 # accessory
 
 [![lint and test](https://github.com/masaushi/accessory/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/masaushi/accessory/actions/workflows/lint_and_test.yml)
@@ -123,6 +125,45 @@ type MyStruct struct {
 ### Specify rules for setting value
 You can specify validation rules for each fields.
 We underlying the 
+
+### Returning the setter's receiver option
+You can set option that the setter returns its receiver.
+
+```go
+type MyStruct struct {
+    notReturnReceiver int `accessor:"setter"`
+    returnReceiver    int `accessor:"setter::returnReceiver"`
+    returnReceiver2   int `accessor:"setter:SetReturnReceiverSecond:returnReceiver"`
+}
+```
+
+Generated methods will be
+
+```go
+func (m *MyStruct) SetNotReturnReceiver(val int) {
+    if m == nil {
+        return
+	  }
+    m.notReturnReceiver = val
+}
+
+func (m *MyStruct) SetReturnReceiver(val int) *MyStruct {
+    if m == nil {
+        return nil
+    }
+    m.returnReceiver = val
+    return m
+}
+
+func (m *MyStruct) SetReturnReceiver2(val int) *MyStruct {
+    if m == nil {
+        return nil
+    }
+    m.returnReceiver2 = val
+    return m
+}
+
+```
 
 ### Run `accessory` command
 
